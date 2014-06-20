@@ -1,0 +1,99 @@
+#include <SoftwareSerial.h>
+
+
+// #include <TinyGPS.h>
+
+
+// SoftwareSerial gpsSerial(11, 12); //verificar pins do GPS
+
+// TinyGPS gps; 
+const int numReadings = 10;
+unsigned long start_time, tot_time, new_time ;
+// long lat, lon;
+int counter = 0;
+float analog0, analog1;
+float T0, mmHg, P0, H0, z, R, g;
+float Temperatura, Voltage, Pressao, Altitude, prev_Altitude;
+
+void get_sensordata()
+{
+  analog0 = (float)analogRead(0);
+  analog1 = (float)analogRead(1);
+}
+
+void setup()
+{
+  Serial.begin(9600);                          
+  pinMode(8,OUTPUT);                                                    
+  delay(200);
+  /* gpsSerial.begin(4800);
+   delay(200); */
+  delay(200);
+
+    Serial.println("SubOrbital Water Rockets");                     
+  delay(200);
+}
+
+
+void loop()
+{
+
+  digitalWrite(8, LOW);  //Liga LED                                                 
+
+  T0=287.57;
+  P0=100269.45;
+  H0=0;
+  z=(-0.0065);
+  R=287.06;
+  g=9.81;
+  prev_Altitude=1000;
+
+  Temperatura=((analog1*5)/1023)/(0.020)+273.15; //Em Kelvin
+  Voltage=analog0/1023.0*5.0;
+  Pressao=(22.222*Voltage+10.556)*1000; //Em Pascal
+  Altitude=(T0/z)*(pow(Pressao/P0,(-z*R)/g)-1)+H0; //Em Metros
+
+  start_time=millis();
+  new_time = millis();
+
+
+  while (new_time-start_time<1000){                
+    new_time = millis();
+  }    
+
+  get_sensordata();
+
+  /* while(gpsSerial.available()){ 
+   if(gps.encode(gpsSerial.read())){
+   gps.get_position(&lat,&lon);
+   }
+   } */
+
+
+  Serial.print ("S");
+  Serial.print (counter);
+  Serial.print (",");
+  Serial.print (start_time);
+  Serial.print (",");
+  Serial.print ("T:");
+  Serial.print (Temperatura);
+  Serial.print (",");
+  Serial.print ("P:");
+  Serial.print (Pressao);
+  Serial.print (",");
+  Serial.print ("H:");
+  Serial.print (Altitude);
+  /* Serial.print (",");
+   Serial.print("lat: ");
+   Serial.print(lat);
+   Serial.print("lon: ");
+   Serial.print(lon); */
+  Serial.println();
+
+  counter++;
+  tot_time = millis() - start_time; 
+
+  digitalWrite(8, HIGH);     
+
+  delay(2000-tot_time); 
+}
